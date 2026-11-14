@@ -332,6 +332,15 @@ window.__ModuleLoader__.load({
               if (!ownChild) { report('sync', { ownChild: 0, kids: kids.length }); return }
               navChildRef.current = ownChild
 
+              // 新版宿主（0.2.2-rc.3）给每个面板行加了「取消固定」按钮（panelUnpin），
+              // 我们的行也能被它收走 —— 一旦点了，本行从侧栏消失、功能直接没了。直接藏掉。
+              try {
+                const mainBtn = own.closest('button')
+                for (const b of ownChild.querySelectorAll('button')) {
+                  if (b !== mainBtn) b.classList.add('sfb-hidden')
+                }
+              } catch { /* 忽略 */ }
+
               for (const el of hidden) el.classList.remove('sfb-hidden')
               hidden = []
               const keptSeen = []

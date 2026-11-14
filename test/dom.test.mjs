@@ -29,6 +29,24 @@ global.Element = dom.window.Element
 global.requestAnimationFrame = dom.window.requestAnimationFrame
 global.IS_REACT_ACT_ENVIRONMENT = true
 
+// 0.2.2-rc.3 起的宿主结构：每个面板行外包一层 div.panelEntry，
+// 并在宽栏下多一个「取消固定」按钮（panelUnpin）。
+{
+  const nav = dom.window.document.querySelector('nav')
+  for (const child of [...nav.children]) {
+    if (child.getAttribute && child.getAttribute('aria-haspopup')) continue
+    const wrap = dom.window.document.createElement('div')
+    wrap.className = 'panelEntry'
+    nav.insertBefore(wrap, child)
+    wrap.appendChild(child)
+    const main = child.querySelector ? child.querySelector('button') : null
+    const un = dom.window.document.createElement('button')
+    un.className = 'panelUnpin'
+    un.setAttribute('aria-label', '从侧边栏取消固定' + (main ? main.getAttribute('aria-label') : ''))
+    wrap.appendChild(un)
+  }
+}
+
 const here = new URL('.', import.meta.url)
 const code = fs.readFileSync(new URL('../client.js', here), 'utf8')
 
@@ -119,6 +137,12 @@ check('热替换后样式表被更新', styleRefreshed)
 const hiddenLabels = [...nav.children]
   .filter((el) => el.classList.contains('sfb-hidden'))
   .map((el) => (el.tagName === 'BUTTON' ? el : el.querySelector('button')).getAttribute('aria-label'))
+{
+  const ownEntry = document.getElementById('mount').parentElement
+  const unpins = [...ownEntry.querySelectorAll('.panelUnpin')]
+  check('我们自己那一行的「取消固定」被藏掉', unpins.length > 0 && unpins.every((b) => b.classList.contains('sfb-hidden')))
+}
+
 check('收起其余面板行', JSON.stringify(hiddenLabels) === JSON.stringify(['插件市场', '自动化任务', '经验库', 'AstBot', '更多']), hiddenLabels.join(','))
 
 // ② 悬停展开
